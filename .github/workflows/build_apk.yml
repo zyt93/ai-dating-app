@@ -20,18 +20,22 @@ jobs:
           channel: stable
           flutter-version: 3.24.0
 
-      - name: Set up Gradle 8.9 (for Flutter 3.24 / Groovy 3 compatibility)
+      - name: Set up Gradle 8.9
         run: |
-          curl -fsSL -o gradle-8.9-bin.zip https://github.com/gradle/gradle/releases/download/v8.9.0/gradle-8.9-bin.zip
+          curl -fsSL -o gradle-8.9-bin.zip https://services.gradle.org/distributions/gradle-8.9-bin.zip || curl -fsSL -o gradle-8.9-bin.zip https://github.com/gradle/gradle/releases/download/v8.9/gradle-8.9-bin.zip
           unzip -q gradle-8.9-bin.zip
           echo "GRADLE_BIN=$PWD/gradle-8.9/bin/gradle" >> "$GITHUB_ENV"
+          echo "GRADLE_ZIP=$PWD/gradle-8.9-bin.zip" >> "$GITHUB_ENV"
 
-      - name: Generate gradle wrapper (gradlew + jar) with Gradle 8.9
+      - name: Generate gradle wrapper (use local Gradle 8.9)
         run: |
           cd android
           "$GRADLE_BIN" wrapper --gradle-version 8.9
           ls -la gradlew gradlew.bat gradle/wrapper/
           test -s gradle/wrapper/gradle-wrapper.jar || { echo "ERROR: jar missing"; exit 1; }
+          sed -i "s#^distributionUrl=.*#distributionUrl=file://$GRADLE_ZIP#" gradle/wrapper/gradle-wrapper.properties
+          echo "--- gradle-wrapper.properties ---"
+          cat gradle/wrapper/gradle-wrapper.properties
 
       - name: Set up JDK
         uses: actions/setup-java@v4

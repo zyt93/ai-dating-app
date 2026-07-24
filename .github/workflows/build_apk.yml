@@ -7,6 +7,9 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,8 +37,6 @@ jobs:
           ls -la gradlew gradlew.bat gradle/wrapper/
           test -s gradle/wrapper/gradle-wrapper.jar || { echo "ERROR: jar missing"; exit 1; }
           sed -i "s#^distributionUrl=.*#distributionUrl=file://$GRADLE_ZIP#" gradle/wrapper/gradle-wrapper.properties
-          echo "--- gradle-wrapper.properties ---"
-          cat gradle/wrapper/gradle-wrapper.properties
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -58,3 +59,13 @@ jobs:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 14
+
+      - name: Publish to GitHub Release (stable link)
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: AI 相亲助手 APK (latest)
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

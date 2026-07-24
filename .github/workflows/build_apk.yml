@@ -21,15 +21,22 @@ jobs:
           channel: stable
           flutter-version: 3.24.0
 
-      - name: Download Gradle distribution
+      - name: Generate gradle-wrapper.jar
         run: |
-          # Download Gradle distribution to extract gradle-wrapper.jar
-          curl -fsSL "https://services.gradle.org/distributions/gradle-8.7-bin.zip" -L -o gradle.zip
-          unzip -q gradle.zip
-          cp gradle-8.7/lib/gradle-wrapper-8.7.jar android/gradle/wrapper/gradle-wrapper.jar 2>/dev/null || \
-          find gradle-8.7 -name "gradle-wrapper*.jar" -exec cp {} android/gradle/wrapper/gradle-wrapper.jar \; -quit
+          # Ubuntu runners have Gradle pre-installed
+          # Use gradle wrapper command to generate gradle-wrapper.jar
+          gradle wrapper --gradle-version 8.7
+          ls -la gradle/wrapper/
+          JAR_SIZE=$(wc -c < gradle/wrapper/gradle-wrapper.jar)
+          echo "gradle-wrapper.jar size: $JAR_SIZE bytes"
+          if [ "$JAR_SIZE" -lt 5000 ]; then
+            echo "ERROR: gradle-wrapper.jar too small ($JAR_SIZE bytes)"
+            exit 1
+          fi
+          # Copy to android location
+          mkdir -p android/gradle/wrapper
+          cp gradle/wrapper/gradle-wrapper.jar android/gradle/wrapper/gradle-wrapper.jar
           ls -la android/gradle/wrapper/
-          rm -rf gradle.zip gradle-8.7
 
       - name: Set up JDK
         uses: actions/setup-java@v4

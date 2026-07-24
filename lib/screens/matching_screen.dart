@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/candidates_provider.dart';
+import '../providers/account_provider.dart';
+import '../services/location_service.dart';
 import '../theme/app_theme.dart';
 import '../models/candidate.dart';
 
@@ -32,10 +34,14 @@ class _MatchingScreenState extends State<MatchingScreen> with TickerProviderStat
   Future<void> _loadMatches() async {
     final profile = Provider.of<ProfileProvider>(context, listen: false).profile;
     final candidatesProvider = Provider.of<CandidatesProvider>(context, listen: false);
+    final account = Provider.of<AccountProvider>(context, listen: false);
     await candidatesProvider.loadCandidates();
     candidatesProvider.matchCandidates(profile);
     setState(() {
-      _matches = candidatesProvider.matchedCandidates;
+      _matches = candidatesProvider.matchedCandidates
+          .where((c) => LocationService.matches(
+              c.location, account.regionScope, account.currentRegion))
+          .toList();
       _done = true;
     });
   }
@@ -57,7 +63,12 @@ class _MatchingScreenState extends State<MatchingScreen> with TickerProviderStat
           ? _buildLoading()
           : _matches.isEmpty
               ? _buildEmpty()
-              : _buildSwipeCards(),
+              : Column(
+                  children: [
+                    _buildFilterBar(),
+                    Expanded(child: _buildSwipeCards()),
+                  ],
+                ),
     );
   }
 
@@ -153,6 +164,29 @@ class _MatchingScreenState extends State<MatchingScreen> with TickerProviderStat
               onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
               child: const Text('返回首页'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    final account = Provider.of<AccountProvider>(context);
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/region'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        color: AppTheme.background,
+        child: Row(
+          children: [
+            const Icon(Icons.location_on, size: 16, color: AppTheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              '范围：${account.regionScope == 'domestic' ? '国内' : '全球'} · ${account.currentRegion}',
+              style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary),
+            ),
+            const Spacer(),
+            const Text('切换', style: TextStyle(fontSize: 12, color: AppTheme.primary)),
           ],
         ),
       ),

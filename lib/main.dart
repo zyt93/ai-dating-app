@@ -11,10 +11,17 @@ import 'screens/matching_screen.dart';
 import 'screens/candidate_detail_screen.dart';
 import 'screens/matches_screen.dart';
 import 'screens/chat_screen.dart';
+import 'screens/chat_list_screen.dart';
+import 'screens/points_screen.dart';
+import 'screens/support_screen.dart';
+import 'screens/gifts_screen.dart';
+import 'screens/region_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
 import 'providers/profile_provider.dart';
 import 'providers/candidates_provider.dart';
+import 'providers/account_provider.dart';
+import 'providers/chat_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,6 +36,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => CandidatesProvider()),
+        ChangeNotifierProvider(create: (_) => AccountProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
         title: 'AI 相亲助手',
@@ -44,6 +53,11 @@ class MyApp extends StatelessWidget {
           '/candidate-detail': (context) => const CandidateDetailScreen(),
           '/matches': (context) => const MatchesScreen(),
           '/chat': (context) => const ChatScreen(),
+          '/chat-list': (context) => const ChatListScreen(),
+          '/points': (context) => const PointsScreen(),
+          '/support': (context) => const SupportScreen(),
+          '/gifts': (context) => const GiftsScreen(),
+          '/region': (context) => const RegionScreen(),
           '/settings': (context) => const SettingsScreen(),
         },
       ),

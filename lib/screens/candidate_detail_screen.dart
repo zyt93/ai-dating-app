@@ -299,7 +299,7 @@ class CandidateDetailScreen extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('已收藏！可在「我的收藏」中查看'), duration: Duration(seconds: 2),
+                const SnackBar(content: Text('已收藏！可在「我的收藏」中查看'), duration: Duration(seconds: 2)),
               );
             },
             icon: const Icon(Icons.favorite),

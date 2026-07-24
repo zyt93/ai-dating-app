@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import '../models/candidate.dart';
+import '../providers/account_provider.dart';
+import '../providers/candidates_provider.dart';
+import '../screens/photo_gallery_screen.dart';
+import '../screens/edu_cert_screen.dart';
+import '../config/app_config.dart';
 import '../theme/app_theme.dart';
 
 class CandidateDetailScreen extends StatelessWidget {
@@ -66,6 +72,8 @@ class CandidateDetailScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     _buildRedFlagsCard(c),
                   ],
+                  const SizedBox(height: 16),
+                  _buildPrivacyCard(context, c),
                   const SizedBox(height: 24),
                   _buildActionButtons(context, c),
                   const SizedBox(height: 32),
@@ -283,27 +291,155 @@ class CandidateDetailScreen extends StatelessWidget {
     );
   }
 
+  /// 隐私内容：联系方式 / 相册 / 学历证书，各需 100 积分解锁。
+  Widget _buildPrivacyCard(BuildContext context, Candidate c) {
+    final account = Provider.of<AccountProvider>(context);
+    final contactKey = 'contact:${c.id}';
+    final photoKey = 'photo:${c.id}';
+    final eduKey = 'edu:${c.id}';
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _cardTitle('隐私内容 · 积分解锁', Icons.lock_outline),
+            const SizedBox(height: 4),
+            const Text('查看联系方式 / 相册 / 学历证书 各需 100 积分',
+                style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+            const SizedBox(height: 8),
+            _privacyRow(
+              context, account, Icons.phone, '联系方式',
+              account.hasUnlocked(contactKey), contactKey,
+              '查看${c.occupation}联系方式',
+              unlockedContent: _contactText(c),
+            ),
+            const Divider(height: 1),
+            _privacyRow(
+              context, account, Icons.photo_album, '相册',
+              account.hasUnlocked(photoKey), photoKey,
+              '查看${c.occupation}相册',
+              onUnlocked: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => PhotoGalleryScreen(candidate: c)),
+              ),
+            ),
+            const Divider(height: 1),
+            _privacyRow(
+              context, account, Icons.school, '学历证书',
+              account.hasUnlocked(eduKey), eduKey,
+              '查看${c.education}学历证书',
+              onUnlocked: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => EduCertScreen(candidate: c)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _privacyRow(
+    BuildContext context,
+    AccountProvider account,
+    IconData icon,
+    String title,
+    bool unlocked,
+    String key,
+    String reason, {
+    String? unlockedContent,
+    VoidCallback? onUnlocked,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon,
+          color: unlocked ? AppTheme.success : AppTheme.textSecondary),
+      title: Text(title, style: const TextStyle(fontSize: 14)),
+      subtitle: unlocked
+          ? Text(unlockedContent ?? '已解锁',
+              style: const TextStyle(fontSize: 12, color: AppTheme.success))
+          : Text('需 ${AppConfig.unlockCostPoints} 积分',
+              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+      trailing: unlocked
+          ? TextButton(
+              onPressed: onUnlocked,
+              child: const Text('查看'),
+            )
+          : ElevatedButton(
+              onPressed: () {
+                if (account.points >= AppConfig.unlockCostPoints) {
+                  if (account.unlock(key, AppConfig.unlockCostPoints, reason)) {
+                    if (onUnlocked != null) onUnlocked();
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('积分不足，去「积分」页看广告赚取')));
+                  Navigator.pushNamed(context, '/points');
+                }
+              },
+              child: Text('解锁 ${AppConfig.unlockCostPoints}'),
+            ),
+      onTap: unlocked ? onUnlocked : null,
+    );
+  }
+
+  String _contactText(Candidate c) {
+    final num = c.id.replaceAll(RegExp(r'\D'), '');
+    return '微信: C${num}_love  ·  手机: 138****${num.padLeft(4, '0')}';
+  }
+
   Widget _buildActionButtons(BuildContext context, Candidate c) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('返回'),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('返回'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Provider.of<CandidatesProvider>(context, listen: false)
+                      .likeCandidate(c);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('已收藏！可在「我的收藏」中查看'),
+                        duration: Duration(seconds: 2)),
+                  );
+                },
+                icon: const Icon(Icons.favorite),
+                label: const Text('收藏'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () =>
+                Navigator.pushNamed(context, '/chat', arguments: c),
+            icon: const Icon(Icons.chat),
+            label: const Text('发消息'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.secondary,
+            ),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('已收藏！可在「我的收藏」中查看'), duration: Duration(seconds: 2)),
-              );
-            },
-            icon: const Icon(Icons.favorite),
-            label: const Text('收藏'),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/gifts'),
+            icon: const Icon(Icons.card_giftcard),
+            label: const Text('送礼物'),
           ),
         ),
       ],

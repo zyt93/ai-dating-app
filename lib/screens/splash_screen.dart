@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/account_provider.dart';
+import '../providers/chat_provider.dart';
 import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,6 +35,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (!mounted) return;
     final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
     await profileProvider.loadProfile();
+    await Provider.of<AccountProvider>(context, listen: false).load();
+    await Provider.of<ChatProvider>(context, listen: false).load();
     if (!mounted) return;
     Navigator.pushReplacementNamed(
       context,

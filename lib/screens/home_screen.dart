@@ -516,9 +516,9 @@ class _ProfileTab extends StatelessWidget {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (_) => const Scaffold(
-                        appBar: AppBar(title: Text('我的收藏')),
-                        body: _LikesTab())));
+                    builder: (_) => Scaffold(
+                        appBar: AppBar(title: const Text('我的收藏')),
+                        body: const _LikesTab())));
           }),
           _profileMenuItem(Icons.help, '帮助与反馈', () {}),
           _profileMenuItem(Icons.info, '关于 AI 相亲助手', () {}),

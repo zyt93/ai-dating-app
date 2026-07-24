@@ -1,4 +1,5 @@
 /// 全局配置：积分与人民币换算、广告奖励、解锁成本、充值上限。
+/// build marker 2026-07-24 feature-complete
 class AppConfig {
   // 积分与人民币换算：100 积分 = 0.01 元  =>  1 元 = 10000 积分
   static const int pointsPerYuan = 10000;

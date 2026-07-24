@@ -23,7 +23,7 @@ jobs:
       - name: Generate gradle wrapper (gradlew + jar)
         run: |
           cd android
-          gradle wrapper --gradle-version 8.7
+          gradle wrapper --gradle-version 8.9
           ls -la gradlew gradlew.bat gradle/wrapper/
           test -s gradle/wrapper/gradle-wrapper.jar || { echo "ERROR: jar missing"; exit 1; }
 
